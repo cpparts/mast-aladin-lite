@@ -35,8 +35,10 @@ class AppSidecarManager:
     _aladin_counter = 0
     _other_counter = 0
 
-    def __init__(self):
+    def __init__(self, app_manager, plugin_manager):
         self.loaded_apps = []
+        self.app_manager = app_manager
+        self.plugin_manager = plugin_manager
 
     def open(
         self,
@@ -295,6 +297,3 @@ def set_app_height(app, height):
             height = f"{height}px"
 
         app.layout.height = height
-
-
-AppSidecar = AppSidecarManager()
