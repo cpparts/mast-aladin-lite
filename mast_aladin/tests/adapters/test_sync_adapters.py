@@ -2,7 +2,7 @@ from astropy.coordinates import SkyCoord
 from mast_aladin.adapters import AladinSyncAdapter, ImvizSyncAdapter
 from mast_aladin.app import MastAladin
 from mast_aladin.tests.test_utils import BaseImviz
-from mast_aladin.aida import AIDA_aspects
+from mast_aladin.adapters.aida_constants import AIDA_aspects
 
 from pytest import approx
 

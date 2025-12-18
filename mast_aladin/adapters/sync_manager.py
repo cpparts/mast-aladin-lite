@@ -1,8 +1,8 @@
-from mast_aladin.aida import AIDA_aspects
+from mast_aladin.adapters.aida_constants import AIDA_aspects
 
 
 class SyncManager():
-    ASPECTS = (AIDA_aspects.CENTER, AIDA_aspects.FOV, AIDA_aspects.ROTATION)
+    ASPECTS = (AIDA_aspects.get_viewport_sync_list())
 
     def __init__(self):
         self.source = None
