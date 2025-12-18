@@ -32,8 +32,10 @@ def is_aladin(app):
 class AppSidecarManager:
     _sidecar_context = None
 
-    def __init__(self):
+    def __init__(self, app_manager, plugin_manager):
         self.loaded_apps = []
+        self.app_manager = app_manager
+        self.plugin_manager = plugin_manager
 
     def open(
         self,
@@ -116,9 +118,9 @@ class AppSidecarManager:
         """
         apps = list(apps)
 
-        if not len(apps) and not include_aladin and not include_jdaviz:
+        if not len(apps):
             # if no apps are given, include one of each:
-            include_jdaviz = include_aladin = True
+            apps = [app for idx, app in self.app_manager.apps.items()]
 
         mal_instances = [app for app in apps if is_aladin(app)]
         jdaviz_instances = [app for app in apps if is_jdaviz(app)]
@@ -205,7 +207,7 @@ class AppSidecarManager:
                     elif is_jdaviz(app):
                         # jdaviz:
                         with solara.Column(gap='0px', style=style):
-                            solara.display(app.default_viewer._obj)
+                            solara.display(app.app)
 
                     else:
                         # other:
@@ -272,6 +274,3 @@ def set_app_height(app, height):
             f"height could not be set for unrecognized app: {app}",
             UserWarning
         )
-
-
-AppSidecar = AppSidecarManager()
