@@ -355,10 +355,8 @@ def test_existing_overlay_name(
     mast_aladin.add_graphic_overlay_from_stcs(stcs_strings)
 
     # name specified, warning triggered
-    with warnings.catch_warnings(record=True) as w:
+    with pytest.warns(match="is already in use. Name `test_1`"):
         mast_aladin.add_graphic_overlay_from_stcs(stcs_strings, name=test_name)
-        assert len(w) == 1
-        assert test_name + "_1" in str(w[-1].message)
 
     assert test_name in mast_aladin._overlays_dict
     assert "overlay_python" in mast_aladin._overlays_dict
