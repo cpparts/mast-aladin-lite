@@ -3,6 +3,7 @@ from mast_table import MastTable
 
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+
 from regions import (
     PolygonSkyRegion
 )
@@ -11,8 +12,12 @@ from astropy.wcs import WCS
 
 from mast_aladin.aida import AID
 from mast_aladin.mixins import DelayUntilRendered
+import mast_aladin.utils.parquet as parquet
+from mast_aladin.utils.validators import is_valid_s3_uri
 
 import roman_datamodels.datamodels as rdd
+import os
+
 
 __all__ = [
     'MastAladin',
@@ -69,6 +74,40 @@ class MastAladin(Aladin, DelayUntilRendered):
                 )
 
         return table_widget
+
+    def add_table(
+        self, table, include_names=None, shape="cross", **table_options
+    ):
+        """Wrapper on the ipyaladin.widget.Aladin.add_table method that enables loading of
+        alternate table types. See ipyaladin.widget.Aladin.add_table for more details on the
+        underlying implementation.
+
+        Parameters
+        ----------
+        table : `~astropy.table.table.QTable` or `~astropy.table.table.Table` or `str`
+            The table to add. Valid types are astropy table and S3 URIs of parquet files.
+        include_names : list[str]
+            List of column names from the remote parquet table to stream into mast-aladin.
+        shape : str | `~ipyaladin.CircleError` | `~ipyaladin.EllipseError`
+            The shape to draw for each source. It accepts the strings "square",
+            "circle", "plus", "cross", "rhomb", and "triangle" as well as the two
+            specific classes `ipyaladin.CircleError` and `ipyaladin.EllipseError`
+            that adapt the size of the drawn shapes (circles or ellipses) to error
+            columns.
+            See ipyaladin example notebook `04_Importing_Tables`.
+        **table_options : dict
+            Keyword arguments. The possible values are documented in `Aladin Lite's table options
+            <https://cds-astro.github.io/aladin-lite/global.html#CatalogOptions>`
+        """
+        if isinstance(table, (os.PathLike, str)):
+            if is_valid_s3_uri(table) and str(table).endswith('.parquet'):
+                table = parquet.table_from_s3(table, include_names)
+            else:
+                raise ValueError(
+                    f"table='{table}' is not a valid S3 URI for a parquet table."
+                )
+
+        return super().add_table(table, shape=shape, **table_options)
 
     def add_asdf(
         self, asdf, **image_options

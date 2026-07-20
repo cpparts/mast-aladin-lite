@@ -20,6 +20,7 @@ dependencies = [
     "mast-table",
     "pysiaf",
     "echo>=0.11.0",
+    "fsspec",
 ]
 dynamic = [
     "version",
