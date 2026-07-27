@@ -21,6 +21,10 @@ class ImvizSyncAdapter(ViewerSyncAdapter):
             )
 
         self.viewer = self.app.viewers[glue_viewer._ref_or_id]
+
+        # TODO (2026-07-22): the jdaviz glue viewer attribute `aid`
+        # will be removed in a PR coming soon, the line below will
+        # need to be updated.
         self.aid = glue_viewer.aid
         self.state = glue_viewer.state
 

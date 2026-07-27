@@ -7,7 +7,6 @@ from .viewer_sync_adapter import ViewerSyncAdapter
 class AladinSyncAdapter(ViewerSyncAdapter):
     def __init__(self, viewer=None):
         self.viewer = viewer if viewer else gca()
-        self.aid = self.viewer.aid
 
     def add_callback(self, func):
         self.viewer.observe(func, names=["_target", "_fov", "_rotation", "_projection"])

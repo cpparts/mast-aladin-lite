@@ -12,9 +12,9 @@ class AIDA_aspects(StrEnum):
     PROJECTION = "projection"
 
 
-class AID:
+class AIDA:
     """
-    Provides API for mast-aladin to allow for parity with
+    Provides a mixin API for mast-aladin to allow for parity with
     jdaviz. This is to be used as a mixin within exisiting classes.
     This is based on the Astro Image Display API (AIDA)[1]_.
 
@@ -23,10 +23,6 @@ class AID:
     .. [1] https://github.com/astropy/astro-image-display-api/
 
     """
-
-    def __init__(self, mast_aladin):
-        self.app = mast_aladin
-
     def _set_center(self, center=None):
         if center is None:
             return
@@ -36,7 +32,7 @@ class AID:
                 f"`center` must be a SkyCoord object. Received {center=}"
             )
 
-        self.app.target = center
+        self.target = center
 
     def _set_fov(self, fov=None):
         if fov is None:
@@ -52,8 +48,8 @@ class AID:
 
         # Determine the scale factor by which we want to adjust setting the
         # ipyaladin horizontal fov
-        scale_factor = fov / min(self.app.fov_xy)
-        self.app.fov = self.app.fov * scale_factor
+        scale_factor = fov / min(self.fov_xy)
+        self.fov = self.fov * scale_factor
 
     def _set_rotation(self, rotation=None):
         if rotation is None:
@@ -67,13 +63,13 @@ class AID:
         if isinstance(rotation, (u.Quantity, Angle)):
             rotation = rotation.to_value(u.deg)
 
-        self.app.rotation = rotation
+        self.rotation = rotation
 
     def _set_projection(self, projection=None):
         if projection is None:
             return
 
-        self.app.projection = projection
+        self.projection = projection
 
     def set_viewport(
         self,
@@ -183,10 +179,10 @@ class AID:
             )
 
         viewport_state = dict(
-            center=self.app.target,
-            fov=min(self.app.fov_xy),
-            rotation=self.app.rotation,
-            projection=self.app.projection,
+            center=self.target,
+            fov=min(self.fov_xy),
+            rotation=self.rotation,
+            projection=self.projection,
             image_label=None
         )
 

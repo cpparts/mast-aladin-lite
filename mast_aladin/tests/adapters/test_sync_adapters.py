@@ -18,7 +18,7 @@ class TestSyncAdapters(BaseImviz):
         imviz_sync_adapter = ImvizSyncAdapter()
 
         # assert starting coordinate is approximately on Cartwheel Galaxy
-        center = mast_aladin_sync_adapter.aid.get_viewport()[AIDA_aspects.CENTER]
+        center = mast_aladin_sync_adapter.viewer.get_viewport()[AIDA_aspects.CENTER]
         assert center.ra.deg == approx(9.4213055, rel=1e-8)
         assert center.dec.deg == approx(-33.71625419, rel=1e-8)
 
@@ -27,6 +27,10 @@ class TestSyncAdapters(BaseImviz):
 
         # assert that the view has changed as expected
         center = mast_aladin_sync_adapter.viewer.target
+
+        # TODO (2026-07-22): the jdaviz glue viewer attribute `aid`
+        # will be removed in a PR coming soon, the line below will
+        # need to be updated.
         imviz_center = imviz_sync_adapter.aid.get_viewport()["center"]
         assert center.ra.deg == approx(imviz_center.ra.deg, rel=1e-8)
         assert center.dec.deg == approx(imviz_center.dec.deg, rel=1e-8)
@@ -41,6 +45,9 @@ class TestSyncAdapters(BaseImviz):
         imviz_sync_adapter = ImvizSyncAdapter()
 
         # assert starting coordinate is approximately on Cartwheel Galaxy
+        # TODO (2026-07-22): the jdaviz glue viewer attribute `aid`
+        # will be removed in a PR coming soon, the line below will
+        # need to be updated.
         center = imviz_sync_adapter.aid.get_viewport(sky_or_pixel="sky")[AIDA_aspects.CENTER]
         assert center.ra.deg == approx(9.425937637864708, rel=1e-8)
         assert center.dec.deg == approx(-33.71515927986813, rel=1e-8)
@@ -49,7 +56,10 @@ class TestSyncAdapters(BaseImviz):
         imviz_sync_adapter.sync_to(mast_aladin_sync_adapter, aspects=["center", "fov", "rotation"])
 
         # assert that the view has changed as expected
+        # TODO (2026-07-22): the jdaviz glue viewer attribute `aid`
+        # will be removed in a PR coming soon, the line below will
+        # need to be updated.
         center = imviz_sync_adapter.aid.get_viewport(sky_or_pixel="sky")[AIDA_aspects.CENTER]
-        aladin_center = mast_aladin_sync_adapter.aid.get_viewport()["center"]
+        aladin_center = mast_aladin_sync_adapter.viewer.get_viewport()["center"]
         assert center.ra.deg == approx(aladin_center.ra.deg, rel=1e-8)
         assert center.dec.deg == approx(aladin_center.dec.deg, rel=1e-8)
