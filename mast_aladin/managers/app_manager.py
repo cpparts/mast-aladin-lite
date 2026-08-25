@@ -1,4 +1,4 @@
-from traitlets import HasTraits, Dict
+from traitlets import HasTraits, Dict, Int
 
 
 class AppManager(HasTraits):
@@ -9,6 +9,7 @@ class AppManager(HasTraits):
     """
 
     _apps = Dict(default_value={}).tag(sync=True)
+    _apps_changed = Int(default_value=0).tag(sync=True)
 
     def __init__(self, mast_manager):
         self._mast_manager = mast_manager
@@ -38,3 +39,4 @@ class AppManager(HasTraits):
                 f"id: {id} already registered to an application. Please use a different, unique, identifier"  # noqa: E501
             )
         self._apps[id] = app
+        self._apps_changed += 1

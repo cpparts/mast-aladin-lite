@@ -1,4 +1,5 @@
 from .app_manager import AppManager
+from .plugin_manager import PluginManager
 
 
 class MastManager():
@@ -8,9 +9,9 @@ class MastManager():
     """
     def __init__(self):
         self._app_manager = AppManager(self)
+        self._plugin_manager = PluginManager(self)
         # todo: add the other managers here
         # - sidecar manager: responsible for managing sidecar windows.abs
-        # - plugin manager: responsible for managing plugins (viewer sync, viewport sync, etc.)
 
     @property
     def AppManager(self):
@@ -19,6 +20,14 @@ class MastManager():
     @property
     def apps(self):
         return self._app_manager.apps
+
+    @property
+    def PluginManager(self):
+        return self._plugin_manager
+
+    @property
+    def plugins(self):
+        return self._plugin_manager.plugins
 
     def register_app(self, app, id):
         """
@@ -37,3 +46,9 @@ class MastManager():
         """
         self._app_manager.register_app(app, id)
         # communicate this change to other managers as needed (e.g. plugin manager, sidecar manager)
+
+    def display_plugin(self, plugin_id):
+        self._plugin_manager.display_plugin(plugin_id)
+
+    def display_plugins(self):
+        self._plugin_manager.display()
