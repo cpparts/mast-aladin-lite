@@ -127,7 +127,10 @@ def test_show_invalid_locs():
     # check invalid sidecar ref
     with pytest.raises(ValueError, match="Invalid ref provided. Must be a `Sidecar`"):
         ma.show(ref="invalid_ref")
-    with pytest.raises(ValueError, match="Invalid ref provided. Must be a `Sidecar`"):
+    with pytest.raises(ValueError, match="Invalid ref provided. App must have an"):
+        ma.show(ref=ma)
+    ma.sidecar = "fake"
+    with pytest.raises(ValueError, match="Invalid ref provided. App must have an"):
         ma.show(ref=ma)
 
     # check invalid popout anchor

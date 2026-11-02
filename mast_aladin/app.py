@@ -463,10 +463,10 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
                         "app with `.sidecar` attribute."
                     )
 
-                if ref is None:
+                if ref is None or not isinstance(ref, Sidecar):
                     raise ValueError(
-                        "Invalid ref provided. Must be a `Sidecar` instance or an "
-                        "app with `.sidecar` attribute."
+                        "Invalid ref provided. App must have an initialized `.sidecar` "
+                        "attribute."
                     )
 
             sc = Sidecar(title=title, anchor=anchor, ref=ref)
