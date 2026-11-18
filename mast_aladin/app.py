@@ -341,6 +341,8 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
 
                 selected_mask_listener = aladin_selection_handler
 
+                self._selected_mask_listeners[name] = selected_mask_listener
+
             # add the mast_table_id to table options so the mast-table associated
             # with the overlay can be retrieved in .update() calls
             if mast_table_id is not None:
@@ -432,13 +434,19 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
 
         for obj in overlay_objs:
             mast_table_id = obj.get("options").get("mast_table_id", None)
+            if mast_table_id is None:
+                mast_table_id = self._mast_table_names.get(
+                    obj.get("options").get("name")
+                )
+
             if not update_flag:
                 self._remove_mast_table_listeners(mast_table_id)
 
             existing_overlay_name = next(
                 (k for k, v in self._mast_table_names.items() if v == mast_table_id),
-                None
+                obj.get("options").get("name")
             )
+
             self._mast_table_names.pop(existing_overlay_name)
 
         super().remove_overlay(overlay_objs)
