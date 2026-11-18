@@ -141,14 +141,14 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
         super()._handle_custom_message(_, message, buffers)
 
     def _on_catalog_loaded(self, name):
-        uid = self._mast_table_names.get(name)
-        if uid is None:
+        mast_table_id = self._mast_table_names.get(name)
+        if mast_table_id is None:
             return
 
-        mt, selection_handler, filter_handler = self._mast_table_listeners[uid]
+        mast_table, selection_handler, filter_handler = self._mast_table_listeners[mast_table_id]
 
-        selection_handler(mt.selected_mask)
-        filter_handler(mt.filter_mask)
+        selection_handler(mast_table.selected_mask)
+        filter_handler(mast_table.filter_mask)
 
     def add_table(
         self,
@@ -280,18 +280,22 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
                     f"table='{table}' is not a valid S3 URI for a parquet table."
                 )
 
-        # handle MastTable
-        uid = None
-        mt = table if isinstance(table, MastTable) else None
-        if mt:
-            table = mt.table
-            uid = id(mt)
+        # determine if table is mast-table, get its data table and its id
+        mast_table_id = None
+        mast_table = table if isinstance(table, MastTable) else None
+        if mast_table:
+            table = mast_table.table
+            mast_table_id = id(mast_table)
 
-        if "id" in table_options:
-            uid = table_options["id"]
-            mt, old_selection_handler, old_filter_handler = self._mast_table_listeners[uid]
-            mt.remove_selection_listener(old_selection_handler)
-            mt.remove_filter_listener(old_filter_handler)
+        # when add_table is called via .update(), retrieve the mast-table
+        # associated with the overlay and remove old listeners
+        if "mast_table_id" in table_options:
+            mast_table_id = table_options["mast_table_id"]
+            mast_table, old_selection_handler, old_filter_handler = self._mast_table_listeners[
+                mast_table_id
+            ]
+            mast_table.remove_selection_listener(old_selection_handler)
+            mast_table.remove_filter_listener(old_filter_handler)
 
         if ra_field is not None and dec_field is not None:
             check_table_for_columns(table, ra_field, dec_field)
@@ -331,14 +335,16 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
             if not name:
                 name = "catalog"
 
-            if mt is not None:
+            if mast_table is not None:
                 def aladin_selection_handler(mask):
-                    mt.set_selected_mask(mask, notify=False)
+                    mast_table.set_selected_mask(mask, notify=False)
 
                 selected_mask_listener = aladin_selection_handler
 
-            if uid is not None:
-                table_options["id"] = uid
+            # add the mast_table_id to table options so the mast-table associated
+            # with the overlay can be retrieved in .update() calls
+            if mast_table_id is not None:
+                table_options["mast_table_id"] = mast_table_id
 
             with warnings.catch_warnings():
                 # Ignore votable unit warning raised by ipyaladin.Aladin.add_table
@@ -357,22 +363,24 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
                     **table_options
                 )
 
-            if mt is not None:
+            if mast_table is not None:
                 def selection_handler(mask):
                     self.select_by_mask(table_layer, mask.tolist())
 
                 def filter_handler(mask):
                     self.filter_by_mask(table_layer, mask.tolist())
 
-                mt.add_selection_listener(selection_handler)
-                mt.add_filter_listener(filter_handler)
+                mast_table.add_selection_listener(selection_handler)
+                mast_table.add_filter_listener(filter_handler)
 
-                self._mast_table_listeners[uid] = (
-                    mt,
+                # store the mast-table, listeners, and ids for reference
+                # when removing and updating overlays
+                self._mast_table_listeners[mast_table_id] = (
+                    mast_table,
                     selection_handler,
                     filter_handler,
                 )
-                self._mast_table_names[name] = uid
+                self._mast_table_names[table_layer.name] = mast_table_id
 
             return table_layer
 
@@ -398,18 +406,18 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
             self.performance_catalogs.append(catalog_layer)
             return catalog_layer.overlay_info
 
-    def _remove_mast_table_listeners(self, table_layer):
-        listeners = self._mast_table_listeners.pop(id(table_layer), None)
+    def _remove_mast_table_listeners(self, mast_table_id):
+        listeners = self._mast_table_listeners.pop(mast_table_id, None)
 
         if listeners is None:
             return
 
-        mt, selection_handler, filter_handler = listeners
+        mast_table, selection_handler, filter_handler = listeners
 
-        mt.remove_selection_listener(selection_handler)
-        mt.remove_filter_listener(filter_handler)
+        mast_table.remove_selection_listener(selection_handler)
+        mast_table.remove_filter_listener(filter_handler)
 
-    def remove_overlay(self, overlay, update=False):
+    def remove_overlay(self, overlay, update_flag=False):
         if isinstance(overlay, Overlay):
             overlay_objs = [overlay]
         elif isinstance(overlay, str):
@@ -419,10 +427,19 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
                 o if isinstance(o, Overlay)
                 else self._overlay_manager.__getitem__(o) for o in overlay
             ]
+        else:
+            raise TypeError("overlay must be a str, Overlay, or iterable of these.")
 
-        for overlay in overlay_objs:
-            if id(overlay) in self._mast_table_listeners:
-                self._remove_mast_table_listeners(overlay)
+        for obj in overlay_objs:
+            mast_table_id = obj.get("options").get("mast_table_id", None)
+            if not update_flag:
+                self._remove_mast_table_listeners(mast_table_id)
+
+            existing_overlay_name = next(
+                (k for k, v in self._mast_table_names.items() if v == mast_table_id),
+                None
+            )
+            self._mast_table_names.pop(existing_overlay_name)
 
         super().remove_overlay(overlay_objs)
 
