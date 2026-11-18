@@ -2,6 +2,8 @@ from unittest.mock import Mock, patch
 from astropy.table import Table, QTable
 import pytest
 
+from mast_table import MastTable
+
 from mast_aladin.app import MastAladin, gca
 from mast_aladin.utils.validators import guess_coord_cols
 
@@ -53,6 +55,41 @@ def test_add_parquet_table(mock_table_from_s3, MastAladin_app):
     )
     assert result["type"] == "table"
     assert result['options']['shape'] == "circle"
+
+
+def test_add_mast_table(MastAladin_app):
+    """
+    Test that the add_table method correctly handles MastTables.
+    """
+    stcs_string = "Circle ICRS 202.4656816 +47.1999842 0.04"
+    table = Table(names=['ra', 'dec', 's_region'], data=[[10.0], [-5.0], [stcs_string]])
+    mast_table = MastTable(table)
+    mast_table_id = id(mast_table)
+    mast_table_overlay = MastAladin_app.add_table(mast_table)
+
+    # confim options contains the mast_table_id
+    assert mast_table_overlay["options"]["mast_table_id"] == mast_table_id
+
+    # confirm the number of listeners and that the correct keys are present
+    assert list(MastAladin_app._mast_table_listeners.keys()) == [mast_table_id]
+    assert list(MastAladin_app._mast_table_names.keys()) == ["catalog"]
+    assert list(MastAladin_app._selected_mask_listeners.keys()) == ["catalog"]
+
+    # update the overlay name to check cleanup
+    mast_table_overlay.update(name="test")
+
+    # confirm the number of listeners and that the correct keys are present
+    assert list(MastAladin_app._mast_table_listeners.keys()) == [mast_table_id]
+    assert list(MastAladin_app._mast_table_names.keys()) == ["test"]
+    assert list(MastAladin_app._selected_mask_listeners.keys()) == ["test"]
+
+    # remove the overlay to check cleanup
+    MastAladin_app.remove_overlay("test")
+
+    # confirm there are no listeners
+    assert list(MastAladin_app._mast_table_listeners.keys()) == []
+    assert list(MastAladin_app._mast_table_names.keys()) == []
+    assert list(MastAladin_app._selected_mask_listeners.keys()) == []
 
 
 @patch("mast_aladin.utils.parquet.table_from_s3")
