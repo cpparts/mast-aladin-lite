@@ -17,7 +17,7 @@ dependencies = [
     "solara >= v1.61.0",
     "roman-datamodels",
     "regions",
-    "mast-table @ git+https://github.com/spacetelescope/mast-table.git",
+    "mast-table >= 1.0.0",
     "pysiaf",
     "echo>=0.11.0",
     "fsspec",
