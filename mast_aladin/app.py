@@ -411,6 +411,7 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
             return catalog_layer.overlay_info
 
     def _remove_mast_table_listeners(self, mast_table_id):
+        """Remove listeners upon overlay removal."""
         listeners = self._mast_table_listeners.pop(mast_table_id, None)
 
         if listeners is None:
@@ -423,7 +424,7 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
 
     def remove_overlay(self, overlay, update_flag=False):
         """
-        Remove an overlay layer defined by a string.
+        Remove an overlay layer.
 
         Parameters
         ----------
