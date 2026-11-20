@@ -132,6 +132,7 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
         self._mast_table_names = {}
 
     def _handle_custom_message(self, _: any, message: dict, buffers: any):
+        """Handle `catalog_loaded` messages and pass through others."""
         event_type = message["event_type"]
         if event_type == "catalog_loaded":
             name = message["content"]["overlay_name"]
@@ -141,6 +142,7 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
         super()._handle_custom_message(_, message, buffers)
 
     def _on_catalog_loaded(self, name):
+        """Resync selection and filter masks after a catalog is loaded."""
         mast_table_id = self._mast_table_names.get(name)
         if mast_table_id is None:
             return
@@ -420,23 +422,38 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
         mast_table.remove_filter_listener(filter_handler)
 
     def remove_overlay(self, overlay, update_flag=False):
+        """
+        Remove an overlay layer defined by a string.
+
+        Parameters
+        ----------
+        overlay : str(s) or Overlay(s)
+            The overlay name (str) or Overlay object to be removed.
+
+        Raises
+        ------
+        TypeError
+            Overlays are not provided as Overlay or names.
+        ValueError
+            Overlay does not exist.
+        """
         if isinstance(overlay, Overlay):
             overlay_objs = [overlay]
         elif isinstance(overlay, str):
-            overlay_objs = [self._overlay_manager.__getitem__(overlay)]
+            overlay_objs = [self._overlay_manager[overlay]]
         elif isinstance(overlay, (list, tuple)):
             overlay_objs = [
                 o if isinstance(o, Overlay)
-                else self._overlay_manager.__getitem__(o) for o in overlay
+                else self._overlay_manager[o] for o in overlay
             ]
         else:
             raise TypeError("overlay must be a str, Overlay, or iterable of these.")
 
         for obj in overlay_objs:
-            mast_table_id = obj.get("options").get("mast_table_id", None)
+            mast_table_id = obj.options.get("mast_table_id", None)
             if mast_table_id is None:
                 mast_table_id = self._mast_table_names.get(
-                    obj.get("options").get("name")
+                    obj.name
                 )
 
             if not update_flag:
@@ -444,10 +461,10 @@ class MastAladin(Aladin, DelayUntilRendered, AIDA):
 
             existing_overlay_name = next(
                 (k for k, v in self._mast_table_names.items() if v == mast_table_id),
-                obj.get("options").get("name")
+                obj.name
             )
 
-            self._mast_table_names.pop(existing_overlay_name)
+            self._mast_table_names.pop(existing_overlay_name, None)
 
         super().remove_overlay(overlay_objs)
 
